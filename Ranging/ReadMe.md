@@ -10,7 +10,7 @@ The SX1280 supports both a serial UART based interface and an SPI one. I have on
 
 The SX1280 has a ranging mode that can measure distance by recording the time of flight of a special packet exchange between two SX1280s. The longest range LoRa settings you can use for ranging are bandwidth 406Khz and spreading factor 10. 
 
-I tested two types of available SX1280 modules, the G-NiceRF LoRa1280 and the Ebyte E28 devices. There are two versions of the Ebyte devices, both have PCB antennas for 2.4Ghz. The E28-2G4M12S is the base module and has 12dBm RF power output. The E28-2G4M20S adds an LNA on the receive side and a power amplifier with 20dBm output on the transmit side. The G-NiceRF is 12dBm output and requires an external antenna.
+I concentrated my testing on the G-NiceRF LoRa1280 devices. These are similar in size and layout to the RFM98 and DRF127x modueles I have used in the past and like those modules you have access to the antenna pin so can fit an antenna connection of choice, SMA, U.FL or a simple wire. The G-NiceRF is 12dBm output.
 
 Semtech produce a development kit with sample code but it was not in a format that allowed for its use in the Arduino environment. The class based structure of the original bits of code was removed and reduced to just two code files, SX1280Library.h and SX1280Includes.h for Arduino. These bits of code currently just need to be included in the same folder\directory as the Arduino .ino file. When I am fully happy with the code it will be published.
 
@@ -19,7 +19,7 @@ The SX1280 is programmed with a series of commands followed by one or more bytes
 <br><br>
 ### First Ranging tests
 
-The first ranging tests were with a E28-2G4M12S (left) and a G-NiceRF device (right). I did not initially have a way of plugging them into a breadboard so I made my own adapters, see picture;
+The first ranging tests were done on breadboards. I did not initially have a way of plugging them into a breadboard so I made my own adapters, see picture;
 
 ![Picture 1](Pictures/SX1280_Breadboard_Prototypes.jpg)
 <br><br>
@@ -45,7 +45,7 @@ So not too bad, the results did seem to be consistent for large open areas.
 
 So short distance ranging seems OK, what about longer distances ?
 
-First I needed a way of connecting 2.4Ghz antennas which normally have SMA type connectors. I designed and had made some Mikrobus and breadboard friendly boards for the Ebyte and G-NiceRF SX1280 LoRa devices, see pictures below;
+First I needed a way of connecting 2.4Ghz antennas which normally have SMA type connectors. I designed and had made some Mikrobus and breadboard friendly boards for the G-NiceRF SX1280 LoRa devices, see pictures below;
 <br><br>
 ![Picture 1](Pictures/Arduinos.jpg) 
 <br><br>
@@ -54,7 +54,7 @@ The larger green PCBs are an ATMega328P based Mini Logger I designed. It can be 
 
 [https://www.mikroe.com/click](https://www.mikroe.com/click)
 
-The SX1280 requires a few more pins than a standard Mikrobus module provides, so I added two pins to the normal 8 on either side for the Busy and DI03 pins, plus the RXenable and TXenable for the E28-2G4M20S. The design of these SX1280 Mikrobus boards does allow them to be used in a standard 2 x 8way Mikrobus socket. This requires that the pin connected to the Mikrobus AN pin is a dual analogue\digital pin which is often the case. 
+The SX1280 requires a few more pins than a standard Mikrobus module provides, so I added two pins to the normal 8 on either side for the Busy and DI03 pins. The design of these SX1280 Mikrobus boards does allow them to be used in a standard 2 x 8way Mikrobus socket. This requires that the pin connected to the Mikrobus AN pin is a dual analogue\digital pin which is often the case. 
 
 The Mikrobus PCBs shown, the yellow ones, are breadboard friendly so will plug into a standard 0.1" breadboard, very useful for prototyping. 
 
