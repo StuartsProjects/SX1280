@@ -1,4 +1,5 @@
-##Ranging Calibration
+## Ranging Calibration
+
 
 The ranging function needs a caibration value which changes according to the spreading factor used, SF5 to SF10 is supported, and the hardware in use. 
 
