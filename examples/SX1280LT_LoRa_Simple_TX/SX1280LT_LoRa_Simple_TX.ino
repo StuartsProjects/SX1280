@@ -31,7 +31,7 @@
 
   Program Operation
 
-  The LoRa settings to do are specified in the 'Settings.h' file.
+  The LoRa settings to use are specified in the 'Settings.h' file.
 
 
 ******************************************************************************************************

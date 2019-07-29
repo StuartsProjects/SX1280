@@ -1,3 +1,5 @@
+## Examples
+
 The Examples folder contains a series of test programs for the SX1280. The programs are described at the bottom of the page. Its recommended to use the **SX1280_LoRa_Register_Test** program first to test the device connections are correct. 
 
 A common feature of the programs is the uses of a series of defines in the settings.h file. These defines determine the frequency used, the bandwidth the spreading factor and coding rate used, for example;
@@ -36,12 +38,16 @@ The full list of options you can set are;
     #define LORA_CR_4_7
     #define LORA_CR_4_8
 
-##Buffers
+
+
+
+
+## Buffers
 
 The data to be sent is loaded into an array called TXBUFFER, the length can be varied to suit, with a maximum of 256 bytes for LoRa and 128  bytes for FLRC. PAckets received by the device are pulled from the FIFO and moved into the array called RXBUFFER.
 
 
-##Packet Addressing
+## Packet Addressing
 
 LoRa is a two way technology, each device is a transceiver. Most often on a particular frequency there will be one transmitter and one receiver. However, this may not always be the case and there could be several nodes in use on the same frequency. 
 
@@ -77,3 +83,25 @@ The high altitude balloon tracking software uses the packet addressing to implem
 **SX1280LT\_LoRa\_Simple\_RX** - Receives a LoRa packets according to the LoRa parameters in the settings.h file. Results displayed in IDE serial monitor. Used together with matching TX program. The LED will flash when a packet is received, you can add and enable a buzzer too. 
 
 **SX1280LT\_LoRa\_Link\_Test\_TX** - This used for testing the sensitivity of links or antennas etc. The transmitter sends a sequence of packets starting at a specified power (in settings.h) and decrease the power used to send the packet by 1dBm at a time. The packet contains the ASCII representation of the packet power such a +10 for 10dBm, +01 for 1dBm and -10 for -10dBm. The receiver prints these ASCII values so you can see at what power level the link fails. Use the SX1280LT_LoRa_Simple_RX program to receive the packets. This program used addressed packets.
+
+**SX1280LT\_Ranging\_Receiver**
+
+This is the program for the node that will respond to ranging request. It waits for incoming ranging requests and if valid responds with a packet back to the requester. 
+
+
+**SX1280L\T_Ranging\_Requester**
+
+This program transmits ranging requests. If the receivers response is picked up the distance is calculated and averaged over 5 ranging attempts. 
+The ranging requester can send requests to specific receivers, see the SX128 datasheet for details. In these examples an address of 16 is used fore both RX and TX so that there is a direct match.
+
+
+**SX1280LT\_Ranging\_Calibration\_Checker**
+
+This is used to calibrate the ranging function, see the separate document 'Ranging Calibration.md' for details on how to use it. Needs the ranging receiver running.
+
+Enjoy. 
+
+### Stuart Robinson
+### July 2019
+
+
