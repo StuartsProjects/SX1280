@@ -131,6 +131,7 @@ The longest range settings for point to point mode, SF12 and bandwidth 203khz sh
      
 <br><br>
 
+
 ### Stuart Robinson
 ### GW7HPW
 ### April 2019
