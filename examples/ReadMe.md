@@ -74,6 +74,6 @@ The high altitude balloon tracking software uses the packet addressing to implem
 
 **SX1280LT\_LoRa\_Simple_TX** - Transmits a series of LoRa packets according to the LoRa parameters in the settings.h file. Used together with matching RX program
 
-**SX1280LT\_LoRa\_Simple\_RX** - Receives a LoRa packets according to the LoRa parameters in the settings.h file. Results displayed in IDE serial monitor. Used together with matching TX program.
+**SX1280LT\_LoRa\_Simple\_RX** - Receives a LoRa packets according to the LoRa parameters in the settings.h file. Results displayed in IDE serial monitor. Used together with matching TX program. The LED will flash when a packet is received, you can add and enable a buzzer too. 
 
 **SX1280LT\_LoRa\_Link\_Test\_TX** - This used for testing the sensitivity of links or antennas etc. The transmitter sends a sequence of packets starting at a specified power (in settings.h) and decrease the power used to send the packet by 1dBm at a time. The packet contains the ASCII representation of the packet power such a +10 for 10dBm, +01 for 1dBm and -10 for -10dBm. The receiver prints these ASCII values so you can see at what power level the link fails. Use the SX1280LT_LoRa_Simple_RX program to receive the packets. This program used addressed packets.
