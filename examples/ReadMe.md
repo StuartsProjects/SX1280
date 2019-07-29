@@ -84,6 +84,11 @@ The high altitude balloon tracking software uses the packet addressing to implem
 
 **SX1280LT\_LoRa\_Link\_Test\_TX** - This used for testing the sensitivity of links or antennas etc. The transmitter sends a sequence of packets starting at a specified power (in settings.h) and decrease the power used to send the packet by 1dBm at a time. The packet contains the ASCII representation of the packet power such a +10 for 10dBm, +01 for 1dBm and -10 for -10dBm. The receiver prints these ASCII values so you can see at what power level the link fails. Use the SX1280LT_LoRa_Simple_RX program to receive the packets. This program used addressed packets.
 
+### Ranging Programs
+
+These are to be considered a work in progress, not intended for any mission critical use. During some recent balloon flights the ranging function would occasionally return invalid results, not yet sure why. 
+
+
 **SX1280LT\_Ranging\_Receiver**
 
 This is the program for the node that will respond to ranging request. It waits for incoming ranging requests and if valid responds with a packet back to the requester. 
