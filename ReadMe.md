@@ -17,7 +17,12 @@ Distances of up to **85km** were recorded for ranging and **89km** for point to 
 
 To install the library select the 'Clone or download' button on the main Github page, then select 'Download Zip'. In the Arduino IDE select 'Sketch' then 'Include Library'. Next select 'Add .ZIP library' and browse to and select the ZIP file you downloaded, it's called 'SX1280-master.zip'.
 
+### Compatibility
 
+Tested on ATMega328P and ATMega1284P. 
+
+<br>
+<br>
 
 
 ### Stuart Robinson
