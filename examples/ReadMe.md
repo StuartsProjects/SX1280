@@ -10,8 +10,9 @@ A common feature of the programs is the uses of a series of defines in the setti
     #define SpreadingFactor LORA_SF10   //LoRa spreading factor    
     #define CodeRate LORA_CR_4_5        //LoRa coding rate
 
+<br>
 
-The full list of options you can set are;
+### LoRa Modem Settings
 
     //LoRa bandwidths
     #define LORA_BW_0200  //203khz
@@ -21,7 +22,7 @@ The full list of options you can set are;
 
 .
 
-    ////LoRa spreading factors
+    //LoRa spreading factors
     #define LORA_SF5
     #define LORA_SF6 
     #define LORA_SF7
@@ -39,19 +40,45 @@ The full list of options you can set are;
     #define LORA_CR_4_8
 
 
+### FLRC Modem Settings
 
+    //FLRC bandwidth and bit rate
+    #define FLRC_BR_1_300_BW_1_2 0x45   //1.3Mbs  
+    #define FLRC_BR_1_000_BW_1_2 0x69   //1.04Mbs 
+    #define FLRC_BR_0_650_BW_0_6 0x86   //0.65Mbs
+    #define FLRC_BR_0_520_BW_0_6 0xAA   //0.52Mbs
+    #define FLRC_BR_0_325_BW_0_3 0xC7   //0.325Mbs
+    #define FLRC_BR_0_260_BW_0_3 0xEB   //0.26Mbs`
+.
 
+    //FLRC coding rate`
+    #define FLRC_CR_1_2  0x00           //coding rate 1:2
+    #define FLRC_CR_3_4  0x02           //coding rate 3:4
+    #define FLRC_CR_1_0  0x04           //coding rate 1 
 
+<br>
+<br>
+
+### GFSK Modem Settings
+
+Not yet tested
+
+### BLE Modem Settings
+
+Not yet tested
+
+<br>
+<br>
 ## Buffers
 
-The data to be sent is loaded into an array called TXBUFFER, the length can be varied to suit, with a maximum of 256 bytes for LoRa and 128  bytes for FLRC. PAckets received by the device are pulled from the FIFO and moved into the array called RXBUFFER.
+The data to be sent is loaded into an array called TXBUFFER, the length can be varied to suit, with a maximum of 256 bytes for LoRa and 128  bytes for FLRC. Packets received by the device are pulled from the FIFO and moved into the array called RXBUFFER.
 
 
 ## Packet Addressing
 
 LoRa is a two way technology, each device is a transceiver. Most often on a particular frequency there will be one transmitter and one receiver. However, this may not always be the case and there could be several nodes in use on the same frequency. 
 
-In order to keep the software simple and allow for the receipt of signals from multiple receivers or directed commands to a particular node, a basic addressing scheme has been implemented and is used by some programs. The are library routines to send and receive packets in addressed and non-addressed format so you choose which to send. When using addressed mode regardless of the data content of the actual payload (in TXBUFFER) each payload is preceded in the transmitted packet with the 3 control bytes. In general the control bytes have been restricted to ASCII printable characters so that they can be shown directly on a terminal monitor, the 3 bytes are;
+In order to keep the software simple and allow for the receipt of signals from multiple receivers or directed commands to a particular node, a basic addressing scheme has been implemented and is used by some programs. There are library routines to send and receive packets in addressed and non-addressed format so you choose which to send. When using addressed mode regardless of the data content of the actual payload (in TXBUFFER) each packet sent has 3 control bytes at the beginning of the packet. In general the control bytes have been restricted to ASCII printable characters so that they can be shown directly on a terminal monitor. The 3 bytes are;
 
 **Packet type**. This either describes the content of the packet, which could be a GPS location payload or is a command to do something and there is no payload. Details of the packet types defined are in the library file 'SX1280LT_Program_Definitions.h'
 

@@ -5,6 +5,8 @@ This is a a repository for my Arduino library for the Semtech SX1280 LoRa device
 The SX1280 operates in the 2.4GHz band. In addition to having a LoRa modem the SX1280 can send GFSK and FLRC (Fast Long Range Communication) packets. 
 These SX1280 devices have been available since 2017 and can be used for both point to point applications and distance measurements using the built in ranging function.
 
+The SX1280 device supports LoRa, FLRC, GFSK and BLE type communications, see the device data sheet for full details. The library here currently only supports LoRa and FLRC mode. FLRC (Fast Long Range Communication) mode is specified as having the same sensitivity as the 203kbps LoRa mode but with an improved data rate of 975kbps.  
+
 ### Distance measurements
 
 As well as providing point to point LoRa communications the SX1280 has a ranging function which measures the time of flight of of a packet exchange between the initiator and receiver and this can be converted to a distance. 
