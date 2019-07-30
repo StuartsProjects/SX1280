@@ -1,6 +1,6 @@
 # SX1280 - Semtech 2.4GHz LoRa Transceivers
 
-This is a a repository for my Arduino library for the Semtech SX1280 LoRa device. This device is available in modules from NiceRF and EByte. The code will support the Ebyte 14 pin modules but not the 16 pin modules that require RX and TX switching.  
+This is a a repository for my Arduino library for the Semtech SX1280 LoRa device. This device is available in modules from NiceRF and EByte. The code will support the Ebyte 14 pin modules but not the 16 pin modules that require RX and TX switching. These modules are all 3.3V devices, do not use directly with 5V Arduinos.
 
 The SX1280 operates in the 2.4GHz band. In addition to having a LoRa modem the SX1280 can send GFSK and FLRC (Fast Long Range Communication) packets. 
 These SX1280 devices have been available since 2017 and can be used for both point to point applications and distance measurements using the built in ranging function. 
