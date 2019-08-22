@@ -25,7 +25,7 @@ The \examples folder of the library contains basic transmitter and receiver prog
 
 ### SX1280 connections  
 
-The SX1280 can operate with a UART or SPI based interface. All the example programs use the SPI interface. The SX1280 will need pin connections for NSS (select) NRESET (reset) RFBUSY (busy) and DIO1. The SPI connections for the SPI interface, SCK, MOSI and MISO also. Most of the testing and evaluation of the SX1280 was carried out using Mikrobus compatible boards, see the boards folder in the testing GITHUB link given above. 
+The SX1280 can operate with a UART or SPI based interface. All the example programs use the SPI interface. The SX1280 will need pin connections for NSS (select) NRESET (reset) RFBUSY (busy) and one of the interrupt out pins, DIO1 is used in the examples. The SPI connections for the SPI interface, SCK, MOSI and MISO are needed also. Most of the testing and evaluation of the SX1280 was carried out using Mikrobus compatible boards, see the boards folder in the testing GITHUB link given above for details. 
 
 ### Library installation
 
