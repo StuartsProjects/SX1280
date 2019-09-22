@@ -31,7 +31,7 @@
 
 
 #define programversion "V1.0"
-#define Serial_Monitor_Baud 115300
+#define Serial_Monitor_Baud 115200
 
 #include <SPI.h>
 #include "Settings.h"
@@ -245,6 +245,3 @@ void setup(void)
   Serial.println(RXBUFFER_SIZE);
   Serial.println();
 }
-
-
-
