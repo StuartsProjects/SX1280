@@ -16,10 +16,10 @@
 #define LORA_SF12     0xC0
 
 //LoRa bandwidths 
-#define LORA_BW_0200  0x34               //203khz
-#define LORA_BW_0400  0x26               //406khz
-#define LORA_BW_0800  0x18               //812khz
-#define LORA_BW_1600  0x0A               //1625khz
+#define LORA_BW_0200  0x34               //actually 203125hz
+#define LORA_BW_0400  0x26               //actually 406250hz
+#define LORA_BW_0800  0x18               //actually 812500hz
+#define LORA_BW_1600  0x0A               //actually 1625000hz
 
 //LoRa coding rates
 #define LORA_CR_4_5   0x01
@@ -48,10 +48,17 @@
 #define LORA_IQ_NORMAL                    0x40
 #define LORA_IQ_INVERTED                  0x00
 
-//End LoRa Modem Sttings**************************************
+
+#define FREQ_STEP                         198.364
+#define FREQ_ERROR_CORRECTION             1.55
 
 
-//SX1280 Interrupt flags
+
+
+//*************************************************************
+// SX1280 Interrupt flags
+//*************************************************************
+
 #define    IRQ_RADIO_NONE                       0x0000
 #define    IRQ_TX_DONE                          0x0001
 #define    IRQ_RX_DONE                          0x0002
@@ -73,7 +80,10 @@
 #define    IRQ_RADIO_ALL                        0xFFFF
 
 
-//SX1280 Commands
+//*************************************************************
+// SX1280 Commands
+//*************************************************************
+
 #define RADIO_GET_PACKETTYPE              0x03
 #define RADIO_GET_IRQSTATUS               0x15
 #define RADIO_GET_RXBUFFERSTATUS          0x17
@@ -112,7 +122,10 @@
 #define RADIO_SET_SAVECONTEXT             0xD5
 
 
-//SX1280 Registers
+//*************************************************************
+// SX1280 Registers
+//*************************************************************
+
 #define REG_LNA_REGIME                    0x0891
 #define REG_LR_PAYLOADLENGTH              0x901
 #define REG_LR_PACKETPARAMS               0x903
@@ -146,8 +159,8 @@
 #define PACKET_TYPE_BLE                   0x04
 
 //SX1280 Standby modes
-#define STDBY_RC                          0x00
-#define STDBY_XOSC                        0x01
+#define MODE_STDBY_RC                     0x00
+#define MODE_STDBY_XOSC                   0x01
 
 //TX and RX timeout based periods
 #define PERIOBASE_15_US                   0x00
@@ -165,7 +178,7 @@
 #define RADIO_RAMP_16_US                  0xC0 
 #define RADIO_RAMP_20_US                  0xE0
 
-//SX1280 Power settingsd
+//SX1280 Power settings
 #define USE_LDO   0x00
 #define USE_DCDC  0x01
 
@@ -179,16 +192,16 @@
 #define RANGING_IDCHECK_LENGTH_24_BITS  0x02
 #define RANGING_IDCHECK_LENGTH_32_BITS  0x03
 
-#define RANGING_RESULT_RAW       0x00
-#define RANGING_RESULT_AVERAGED  0x01
-#define RANGING_RESULT_DEBIASED  0x02
-#define RANGING_RESULT_FILTERED  0x03
+#define RANGING_RESULT_RAW              0x00
+#define RANGING_RESULT_AVERAGED         0x01
+#define RANGING_RESULT_DEBIASED         0x02
+#define RANGING_RESULT_FILTERED         0x03
 
 
-#define MASK_RANGINGMUXSEL            0xCF
+#define MASK_RANGINGMUXSEL              0xCF
 
-#define RADIO_RANGING_ROLE_SLAVE   0x00
-#define RADIO_RANGING_ROLE_MASTER  0x01
+#define RADIO_RANGING_ROLE_SLAVE        0x00
+#define RADIO_RANGING_ROLE_MASTER       0x01
 
 
 //*************************************************************
@@ -226,22 +239,22 @@
 #define    GFS_BLE_MOD_IND_3_75  14
 #define    GFS_BLE_MOD_IND_4_00  15
 
-#define    PREAMBLE_LENGTH_04_BITS  0x00         //4 bits
-#define    PREAMBLE_LENGTH_08_BITS  0x10         //8 bits
-#define    PREAMBLE_LENGTH_12_BITS  0x20         //12 bits
-#define    PREAMBLE_LENGTH_16_BITS  0x30         //16 bits
-#define    PREAMBLE_LENGTH_20_BITS  0x40         //20 bits
-#define    PREAMBLE_LENGTH_24_BITS  0x50         //24 bits
-#define    PREAMBLE_LENGTH_28_BITS  0x60         //28 bits
-#define    PREAMBLE_LENGTH_32_BITS  0x70         //32 bits
+#define    PREAMBLE_LENGTH_04_BITS        0x00      //4 bits
+#define    PREAMBLE_LENGTH_08_BITS        0x10      //8 bits
+#define    PREAMBLE_LENGTH_12_BITS        0x20      //12 bits
+#define    PREAMBLE_LENGTH_16_BITS        0x30      //16 bits
+#define    PREAMBLE_LENGTH_20_BITS        0x40      //20 bits
+#define    PREAMBLE_LENGTH_24_BITS        0x50      //24 bits
+#define    PREAMBLE_LENGTH_28_BITS        0x60      //28 bits
+#define    PREAMBLE_LENGTH_32_BITS        0x70      //32 bits
 
-#define    GFS_SYNCWORD_LENGTH_1_BYTE  0x00      //Sync word length 1 byte
-#define    GFS_SYNCWORD_LENGTH_2_BYTE  0x02      //Sync word length 2 bytes
-#define    GFS_SYNCWORD_LENGTH_3_BYTE  0x04      //Sync word length 3 bytes
-#define    GFS_SYNCWORD_LENGTH_4_BYTE  0x06      //Sync word length 4 bytes
-#define    GFS_SYNCWORD_LENGTH_5_BYTE  0x08      //Sync word length 5 bytes  
+#define    GFS_SYNCWORD_LENGTH_1_BYTE     0x00      //Sync word length 1 byte
+#define    GFS_SYNCWORD_LENGTH_2_BYTE     0x02      //Sync word length 2 bytes
+#define    GFS_SYNCWORD_LENGTH_3_BYTE     0x04      //Sync word length 3 bytes
+#define    GFS_SYNCWORD_LENGTH_4_BYTE     0x06      //Sync word length 4 bytes
+#define    GFS_SYNCWORD_LENGTH_5_BYTE     0x08      //Sync word length 5 bytes  
 
-#define    RADIO_RX_MATCH_SYNCWORD_OFF    0x00   //no search for SyncWord
+#define    RADIO_RX_MATCH_SYNCWORD_OFF    0x00      //no search for SyncWord
 #define    RADIO_RX_MATCH_SYNCWORD_1      0x10
 #define    RADIO_RX_MATCH_SYNCWORD_2      0x20
 #define    RADIO_RX_MATCH_SYNCWORD_1_2    0x30
@@ -250,8 +263,8 @@
 #define    RADIO_RX_MATCH_SYNCWORD_2_3    0x60
 #define    RADIO_RX_MATCH_SYNCWORD_1_2_3  0x70
 
-#define    RADIO_PACKET_FIXED_LENGTH     0x00  //The packet is fixed length, klnown on both RX and TX, no header
-#define    RADIO_PACKET_VARIABLE_LENGTH  0x20  //variable size, header included
+#define    RADIO_PACKET_FIXED_LENGTH      0x00      //The packet is fixed length, klnown on both RX and TX, no header
+#define    RADIO_PACKET_VARIABLE_LENGTH   0x20      //The packet is variable size, header included
 
 #define RADIO_CRC_OFF      0x00
 #define RADIO_CRC_1_BYTES  0x10
@@ -261,7 +274,7 @@
 #define   RADIO_WHITENING_ON   0x00
 #define   RADIO_WHITENING_OFF  0x08
 
-//End GFSK *************************************************************
+//End GFSK ****************************************************
 
 
 
@@ -291,7 +304,6 @@
 #define RADIO_MOD_SHAPING_BT_1_0  0x10
 #define RADIO_MOD_SHAPING_BT_0_5  0x20
 
-#define   WHITENING   0x08          //No Whitnening avaialble in FLRC, must be set to off
 
 //Table 13-45: PacketStatus2 in FLRC Packet
 #define PacketCtrlBusy  0x01
@@ -309,42 +321,27 @@
 #define rxpiderr   0x08
 #define rx_no_ack  0x10
 
-
 //FLRC default packetparamns
 #define FLRC_Default_AGCPreambleLength  PREAMBLE_LENGTH_32_BITS       //packetParam1
-#define FLRC_Default_SyncWordLength     FLRC_SYNC_WORD_LEN_P32S       //packetParam2                                 
+#define FLRC_Default_SyncWordLength     FLRC_SYNC_WORD_LEN_P32S       //packetParam2
 #define FLRC_Default_SyncWordMatch      RADIO_RX_MATCH_SYNCWORD_1     //packetParam3
 #define FLRC_Default_PacketType         RADIO_PACKET_VARIABLE_LENGTH  //packetParam4
 #define FLRC_Default_PayloadLength      BUFFER_SIZE_DEFAULT           //packetParam5
 #define FLRC_Default_CrcLength          RADIO_CRC_3_BYTES             //packetParam6
 #define FLRC_Default_Whitening          RADIO_WHITENING_OFF           //packetParam7
 
-//End FLRC*************************************************************
 
-#define TXBUFFER_SIZE_DEFAULT  128
-#define RXBUFFER_SIZE_DEFAULT  128
-#define BUFFER_SIZE_DEFAULT    128
+//Table 11-15 Sleep modes
+#define RETAIN_INSTRUCTION_RAM   0x04 
+#define RETAIN_DATABUFFER        0x02
+#define RETAIN_DATA_RAM          0x01
+#define RETAIN_None              0x00
 
-#define FREQ_STEP  198.364
-
-
-#ifndef TXBUFFER_SIZE
-#define TXBUFFER_SIZE 16
-#endif
-
-#ifndef RXBUFFER_SIZE
-#define RXBUFFER_SIZE 16
-#endif
-
-#ifndef POWER
-#define POWER 1
-#endif
 
 #ifndef RAMP_TIME
 #define RAMP_TIME RADIO_RAMP_02_US
 #endif
 
-//default setTX Parameters
 #ifndef PERIODBASE
 #define PERIODBASE PERIOBASE_01_MS
 #endif

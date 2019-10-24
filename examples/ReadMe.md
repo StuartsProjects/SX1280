@@ -102,38 +102,94 @@ The high altitude balloon tracking software uses the packet addressing to implem
 
 <br>
 
+For the example programs set the serial monitor baud rate to 115200 baud.
 
-**SX1280\_LoRa\_Register_Test** - Checks to see if a SX1280 device can be found. prints a list of register read. 
+**1 SX1280 LoRa RegisterTest** - Checks to see if a SX1280 device can be found. Prints a list of registers read. Use this program first to check the SX1280 module is wired up correctly.  
 
-**SX1280LT\_LoRa\_Simple_TX** - Transmits a series of LoRa packets according to the LoRa parameters in the settings.h file. Used together with matching RX program
+**2 SX1280LT LoRa Simple TX** - Transmits a series of LoRa packets according to the LoRa parameters in the settings.h file. The LED will flash when a packet is transmitted. Used together with matching RX program. 
 
-**SX1280LT\_LoRa\_Simple\_RX** - Receives a LoRa packets according to the LoRa parameters in the settings.h file. Results displayed in IDE serial monitor. Used together with matching TX program. The LED will flash when a packet is received, you can add and enable a buzzer too. 
+**3 SX1280LT LoRa Simple RX** - Receives LoRa packets according to the LoRa parameters in the settings.h file. Results, RSSI, SNR, errors etc are  displayed in the Arduino IDE serial monitor. The LED will flash when a packet is received, you can add and enable a buzzer too. Used together with matching TX program.  
 
-**SX1280LT\_LoRa\_Link\_Test\_TX** - This used for testing the sensitivity of links or antennas etc. The transmitter sends a sequence of packets starting at a specified power (in settings.h) and decrease the power used to send the packet by 1dBm at a time. The packet contains the ASCII representation of the packet power such a +10 for 10dBm, +01 for 1dBm and -10 for -10dBm. The receiver prints these ASCII values so you can see at what power level the link fails. Use the SX1280LT_LoRa_Simple_RX program to receive the packets. This program used addressed packets.
+**4 SX1280LT LoRa Link Test TX** - This used for testing the sensitivity of links or antennas etc. The transmitter sends a sequence of packets starting at a specified power (in settings.h) and decreasing the power used to send the packet by 1dBm at a time. The packet contains the ASCII representation of the packet power such a +10 for 10dBm, +01 for 1dBm and -10 for -10dBm. The receiver prints these ASCII values so you can see at what power level the link fails. Use the '3 SX1280LT_LoRa_Simple_RX' program to receive the packets. This program used addressed packets. The principles of this type of link testing are discussed, for 434Mhz LoRa in the document '[Testing and Comparing - December 2018](https://github.com/LoRaTracker/Link-Tester2/blob/master/Testing%20and%20Comparing%20-%20December%202018.pdf)' see the section on 'Test Software – Descending Power Tests' in particular. 
+
+**5 SX1280LT LoRa FrequencyCounter Check_TX**
+
+This program generates a LoRa packet that is around 5 seconds long. The program can be used for checking the frequency programmed for the SX1280 is as expected and for measuring the power output level.
+
+**6 SX1280LT LoRa RX Frequency Error Check**
+
+This receiver program demonstrates the use of the ability of the SX1280 to measure the frequency error, in relation to the receivers frequency, of an incoming packet. Prints the frequency error over an average of 10 packets to the serial monitor. Can be used to ensure that modules are close together in frequency. 
+
+**7 SX1280LT LoRa Simple TX Implicit**
+
+Transmitter program that demonstrates the use of implicit header mode packets that are fixed length. There is no packet header in implicit mode so the packet length and presence of packet CRC must be configured the same as for the matching RX program. 
+
+
+**8 SX1280LT LoRa Simple RX Implicit**
+
+Receiver program that demonstrates the use of implicit header mode packets that are fixed length. There is no packet header in implicit mode so the packet length and presence of packet CRC must be configured the same as for the matching TX program.
+
+**9 SX1280LT LoRa TX and Sleep**
+
+The SX1280 has features that allow the register state of the device to be saved internally before putting the device into low current deep sleep. When the device is woken up, by pulsing the NSS select pin, the device reloads all the internal registers and the device can continue as if it had never been asleep. The feature avoids having to reconfigure the device on wakeup. The program sends a packet 'Hello World1' goes into deep sleep for around 10 seconds, wakes up an attempts to transmit a 'Hello World2'. Packet. If the wakeup is working correctly then the '3 SX1280LT LoRa Simple RX' program should show both packets arriving.  
+
 
 ### Ranging Programs
 
 These are to be considered a work in progress, not intended for any mission critical use. During some recent balloon flights the ranging function would occasionally return invalid results, not yet sure why. 
 
 
-**SX1280LT\_Ranging\_Receiver**
+**10 SX1280LT Ranging Master**
 
-This is the program for the node that will respond to ranging request. It waits for incoming ranging requests and if valid responds with a packet back to the requester. 
+This program transmits the ranging requests. It will attempt 5 ranging requests and average the results of the number of valid responses. The ranging requester can send requests to specific receivers, see the SX1280 datasheet for details. In these examples an address of 16 is used for both RX and TX so that there is a direct match.
+
+The Ranging Master program can display the results on an SSD1306 OLED display, handy for portable use. To enable this option in the program comment in the //#define ENABLEDISPLAY line in the Settings.h file by removing the two // characters at the start of the line. 
+
+**11 SX1280LT Ranging Slave**
+
+This is the program for the slave node that will respond to ranging requests. It waits for incoming ranging requests of the correct address and if valid responds with a packet back to the master. 
 
 
-**SX1280L\T_Ranging\_Requester**
-
-This program transmits ranging requests. If the receivers response is picked up the distance is calculated and averaged over 5 ranging attempts. 
-The ranging requester can send requests to specific receivers, see the SX128 datasheet for details. In these examples an address of 16 is used fore both RX and TX so that there is a direct match.
-
-
-**SX1280LT\_Ranging\_Calibration\_Checker**
+**12 SX1280LT Ranging Calibration Checker**
 
 This is used to calibrate the ranging function, see the separate document 'Ranging Calibration.md' for details on how to use it. Needs the ranging receiver running.
 
-Enjoy. 
 
+**13 SX1280LT FLRC Simple RX**
+
+Receives Fast Long Range Communications (FLRC) mode packets according to the LoRa parameters in the settings.h file. Results, RSSI, SNR, errors etc are  displayed in the Arduino IDE serial monitor. The LED will flash when a packet is received, you can add and enable a buzzer too. Used together with matching TX program. According to the SX1280 data sheet for LoRa at SF5 and bandwidth 1625khz, the effective data rate is 203kbps with a sensitivity of -99dBm. For FLRC mode at a bit rate of 1.3Mbps and bandwidth of 1.2Mhz the effective data rate is 975kbps at the same sensitivity (-99dBm) as 203kbps LoRa.    
+
+**14 SX1280LT FLRC Simple RX**
+
+Transmits Fast Long Range Communications (FLRC) mode packets according to the LoRa parameters in the settings.h file. The LED will flash when a packet is transmitted, Used together with matching RX program. 
+
+### Bufferless Programs
+
+
+**15 SX1280LT LoRa Bufferless TX**
+
+This is a demonstration of writing outgoing packets direct to the SX1280 FIFO, with no memory buffer required. Variables such as integers and floats can be written. The order the variables are written to the FIFO on the transmitter must match the order they are read from the FIFO in the matching RX program.
+
+**16 SX1280LT LoRa Bufferless RX**
+
+This is a demonstration of reading incoming packets direct from the SX1280 FIFO, with no memory buffer required. Variables such as integers and floats can be read. The order the variables are read from the FIFO on the receiver must match the order they are written to the FIFO in the matching TX program.
+
+### RX and TX Enable Switching
+
+
+**17 SX1280LT LoRa Simple RX RXTXEnable**
+
+Some SX1280 devices such as the Ebyte E28-2G4M20S have RX enable and TX enable pins that must be manually switched for transmit and receive operations. This program and the matching RX program demonstrates the use of the RX TX enable switching. In essense all that need to be down is to define the RXEN and TXEN pins in the Settings.h file and call this function at the initial configuration; **SX1280LT.rxtxInit(RXEN, TXEN)**. For RX mode RXEN is switched high and TXEN is low. For TX mode TXEN is switched high and RXEN is low.   
+
+**17 SX1280LT LoRa Simple TX RXTXEnable**
+
+Matching transmitter program for the '17 SX1280LT LoRa Simple RX RXTXEnable' program. 
+
+
+Enjoy. 
+<br>
+<br>
 ### Stuart Robinson
-### July 2019
+### October 2019
 
 

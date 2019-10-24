@@ -4,7 +4,7 @@
 *******************************************************************************************************************************
   Easy Build LoRaTracker Programs for Arduino
 
-  Copyright of the author Stuart Robinson - 2/10/17
+  Copyright of the author Stuart Robinson - 22/10/19
 
   http://www.LoRaTracker.uk
 
@@ -16,7 +16,8 @@
   The programs are supplied as is, it is up to individual to decide if the programs are suitable for the intended purpose and
   free from errors.
 
-  General program definitions used by various LoRaTracker boards.
+  These are general program definitions used by various LoRaTracker programs. They are not needed if your writing
+  your own applications.
 
   To Do:
 
@@ -74,8 +75,8 @@ const char Broadcast = '*';             //Broadcast address
 const char PacketStart = '$';           //Command packets have a payload of at least one byte, so put this at start
 const char HABPacket = '$';             //HAB Style location payload in CSV ASCII format
 
-const byte Strip = 1;           //value for setting stip of addressing information on packet
-const byte NoStrip = 0;         //value for sending addressing information as part of packet
+const byte Strip = 1;                   //value for setting stip of addressing information on packet
+const byte NoStrip = 0;                 //value for sending addressing information as part of packet
 
 /*
 ******************************************************************************************************
@@ -101,15 +102,15 @@ const byte Do_MENUDEBUG = 4;           //bit num to set in config byte to enable
 
 
 //Status byte settings
-const byte GPSFix = 0;               //flag bit number to indicate GPS has current fix
-const byte UBLOXDynamicModel6Set = 1;//flag bit set when UBLOX dynamic mode 6 has been set (and Checked)
-const byte GLONASSisoutput = 2;      //flag bit number to indicate GLONASS found
-const byte GPSError = 3;             //flag bit to indicate GPS error or some sort.
-const byte TrackerLost = 6;          //flag bit indication that tracker in lost mode
-const byte NoGPSTestMode = 7;        //flag bit number to indicate tracker in in GPS test mode
+const byte GPSFix = 0;                 //flag bit number to indicate GPS has current fix
+const byte UBLOXDynamicModel6Set = 1;  //flag bit set when UBLOX dynamic mode 6 has been set (and Checked)
+const byte GLONASSisoutput = 2;        //flag bit number to indicate GLONASS found
+const byte GPSError = 3;               //flag bit to indicate GPS error or some sort.
+const byte TrackerLost = 6;            //flag bit indication that tracker in lost mode
+const byte NoGPSTestMode = 7;          //flag bit number to indicate tracker in in GPS test mode
 
 
-#define SwitchOn 1                   //for tracker GPS control
+#define SwitchOn 1                     //for tracker GPS control
 #define DontSwitch 0
 #define LeaveOff 0
 #define LeaveOn 1
@@ -291,40 +292,3 @@ const unsigned int addr_EndMemory = 0x3FF;
 #define Terminal_Mode 2                             //used as flag and return values
 
 
-
-/*
-******************************************************************************************************
-Display Functions – for serial based text displays
-******************************************************************************************************
-*/
-
-/*
-#define StartText          0x23     //‘#’
-#define EndText            0x00 
-#define ClearDisplay       0x30     //‘0’ 
-#define InitialiseDisplay  0x31     //‘1’
-#define CursorPosition     0x32     //‘2’ 
-#define FontSize           0x33     //‘3’
-#define FontStyle          0x34     //‘4’ 
-#define UpdateDisplay      0x35     //‘5’
-#define ClearRow           0x36     //‘6’
-#define DisplayRotation    0x37     //‘7’
-#define TextColourBasic         0x41  //‘A’    
-#define BackgroundColourBasic   0x43  //‘C’ 
-#define Contrast                0x44  //‘D’
-*/
-
-
-/*
-******************************************************************************************************
-AFSK RTTY Baud delays
-delay in uS x 2 for 1 bit. 4700 = 100baud, 2295 = 200baud, 1470 = 300baud, 680 = 600baud, 275 = 1200baud.
-******************************************************************************************************
-*/
-
-const unsigned int AFSKrttybaud100 = 4700; 
-const unsigned int AFSKrttybaud200 = 2295; 
-const unsigned int AFSKrttybaud300 = 1470; 
-const unsigned int AFSKrttybaud600 = 680; 
-const unsigned int AFSKrttybaud1200 = 275;
- 

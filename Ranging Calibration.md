@@ -1,7 +1,7 @@
 ## Ranging Calibration
 
 
-The ranging function needs a calibration value which changes according to the spreading factor used, SF5 to SF10 is supported, and the hardware in use. 
+The ranging function needs a calibration value which changes according to the spreading factor used, SF5 to SF10 is supported, and the hardware in use. The calibration value will allso vary between each individual module and type of module. Best to label each module and record the calibration value for each module.  
 
 There is a fixed time that it takes the ranging packet exchange to start, be transmitted, received by the remote device the reply sent and the reply processed. This fixed time is static and should be the same no matter how far apart the initiation and receiver are. 
 

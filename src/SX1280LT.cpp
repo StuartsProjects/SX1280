@@ -1,8 +1,7 @@
 #include <SX1280LT.h>
 #include <SPI.h>
 
-//#define SX1280DEBUG             //enable level 1 debug messages
-//#define SX1280DEBUG2              //enable level 2 debug messages
+//#define SX1280DEBUG             //enable debug messages
 
 
 SX1280Class::SX1280Class()
@@ -30,10 +29,9 @@ bool SX1280Class::begin(int8_t pinNSS, int8_t pinNRESET, int8_t pinRFBUSY, int8_
   Serial.println(_DIO3);
 #endif
 
-  spiInit(MSBFIRST, SPI_CLOCK_DIV16, SPI_MODE0);
   pinInit(pinNSS, pinNRESET, pinRFBUSY, pinDIO1, pinDIO2, pinDIO3);
 
-  //assign the passed pins to the class private variabled
+  //assign the passed pins to the class private variable
   _NSS = pinNSS;
   _NRESET = pinNRESET;
   _RFBUSY = pinRFBUSY;
@@ -94,6 +92,7 @@ void SX1280Class::pinInit(int8_t _NSS, int8_t _NRESET, int8_t _RFBUSY, int8_t _D
 }
 
 
+
 void SX1280Class::spiInit(uint8_t msborder, uint8_t clockdiv, uint8_t mode)
 {
 #ifdef SX1280DEBUG
@@ -101,19 +100,17 @@ void SX1280Class::spiInit(uint8_t msborder, uint8_t clockdiv, uint8_t mode)
 #endif
   SPI.begin();
   SPI.setBitOrder(msborder);           //depends on SX1280 spi timing
-
-
   SPI.setClockDivider(clockdiv);       //too fast may cause error
   SPI.setDataMode(mode);
 }
 
 
-void SX1280Class::rxtxpinInit(int8_t pinRXEN, int8_t pinTXEN)
+void SX1280Class::rxtxInit(int8_t pinRXEN, int8_t pinTXEN)
 {
 #ifdef SX1280DEBUG
   Serial.println(F("rxtxpinInit()"));
 #endif
-
+   _rxtxpinmode = true;
   _RXEN = pinRXEN;
   _TXEN = pinTXEN;
 
@@ -124,18 +121,53 @@ void SX1280Class::rxtxpinInit(int8_t pinRXEN, int8_t pinTXEN)
 }
 
 
+void SX1280Class::setupLoRaRX(uint32_t frequency, int32_t offset, uint8_t modParam1, uint8_t modParam2, uint8_t  modParam3)
+{
+  setStandby(MODE_STDBY_RC);
+  setRegulatorMode(USE_LDO);
+  setPacketType(PACKET_TYPE_LORA);
+  setRfFrequency(frequency, offset);
+  setBufferBaseAddress(0, 0);
+  setModulationParams(modParam1, modParam2, modParam3);
+  setPacketParams(12, LORA_PACKET_VARIABLE_LENGTH, 255, LORA_CRC_ON, LORA_IQ_NORMAL, 0, 0);
+  setDioIrqParams(IRQ_RADIO_ALL, (IRQ_RX_DONE + IRQ_HEADER_ERROR + IRQ_CRC_ERROR + IRQ_RX_TX_TIMEOUT), 0, 0);
+}
+
+
+void SX1280Class::setupLoRaTX(uint32_t frequency, int32_t offset, uint8_t modParam1, uint8_t modParam2, uint8_t  modParam3)
+{
+  setStandby(MODE_STDBY_RC);
+  setRegulatorMode(USE_LDO);
+  setPacketType(PACKET_TYPE_LORA);
+  setRfFrequency(frequency, offset);
+  setBufferBaseAddress(0, 0);
+  setModulationParams(modParam1, modParam2, modParam3);
+  setPacketParams(12, LORA_PACKET_VARIABLE_LENGTH, 255, LORA_CRC_ON, LORA_IQ_NORMAL, 0, 0);
+  setDioIrqParams(IRQ_RADIO_ALL, (IRQ_TX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);
+}
+
+
 void SX1280Class::resetDevice()
 {
 #ifdef SX1280DEBUG
   Serial.println(F("resetDevice()"));
 #endif
 
-  //timings from Semtech library
+  //timings taken from Semtech library
   delay(20);
   digitalWrite(_NRESET, LOW);
   delay(50);
   digitalWrite(_NRESET, HIGH);
   delay(20);
+}
+
+
+void SX1280Class::wake()
+{
+digitalWrite(_NSS, LOW);
+delay(1);
+digitalWrite(_NSS, HIGH);
+delay(1);
 }
 
 
@@ -152,6 +184,7 @@ void SX1280Class::setStandby(uint8_t standbyconfig)
   SPI.transfer(Opcode);
   SPI.transfer(standbyconfig);
   digitalWrite(_NSS, HIGH);
+  checkBusy();
 }
 
 
@@ -169,12 +202,12 @@ void SX1280Class::checkBusy()
     delay(1);
     busy_timeout_cnt++;
 
-    if (busy_timeout_cnt > 5) //wait 5mS for busy to complete
+    if (busy_timeout_cnt > 5)                     //wait 5mS for busy to complete
     {
       Serial.println(F("ERROR - Busy Timeout!"));
-      setStandby(0);          //0:STDBY_RC; 1:STDBY_XOSC
-      resetDevice();          //reset device
-      config();               //re-run saved config
+      setStandby(0);                              //0:STDBY_RC; 1:STDBY_XOSC
+      resetDevice();                             
+      config();                                   //re-run saved config
       break;
     }
   }
@@ -217,33 +250,31 @@ void SX1280Class::writeCommand(uint8_t Opcode, uint8_t *buffer, uint16_t size)
 }
 
 
-void SX1280Class::printASCIIPacket(uint8_t *buffer, uint8_t tsize)
+void SX1280Class::printASCIIPacket(uint8_t *buffer, uint8_t size)
 {
 #ifdef SX1280DEBUG
   Serial.println(F("printASCIIPacket()"));
 #endif
 
   uint8_t index;
-  //tsize--;
 
-  for (index = 0; index < tsize; index++)
+  for (index = 0; index < size; index++)
   {
-    Serial.write(buffer[index]);
+  Serial.write(buffer[index]);
   }
 
 }
 
 
-void SX1280Class::printHEXPacket(uint8_t *buffer, uint8_t tsize)
+void SX1280Class::printHEXPacket(uint8_t *buffer, uint8_t size)
 {
 #ifdef SX1280DEBUG
   Serial.println(F("printHEXPacket()"));
 #endif
 
   uint8_t index;
-  tsize--;
 
-  for (index = 0; index <= tsize; index++)
+  for (index = 0; index < size; index++)
   {
     Serial.print(F("["));
     Serial.print(index);
@@ -736,84 +767,199 @@ void SX1280Class::readRXBufferStatus()
 }
 
 
-uint8_t SX1280Class::readPacketAddressed(uint8_t *RXbuffer, uint8_t size)
+uint8_t SX1280Class::readPacketAddressedLoRa(uint8_t *RXbuffer, uint8_t size)
 {
 #ifdef SX1280DEBUG
   Serial.println(F("readPacketAddressed()"));
 #endif
 
   uint8_t buffer[2];
-  uint8_t index, RegData, _RXStart, _RXEnd;
-  uint8_t maxindex = (size - 1);
+  uint8_t index, RegData, RXStart, RXEnd;
 
   readCommand(RADIO_GET_RXBUFFERSTATUS, buffer, 2);
 
-  _RXPacketL = (buffer[0] - 3);
-  _RXStart = buffer[1];
-  _RXEnd = (_RXPacketL - 1);                    //calculate the new end of the packet in the buffer, to allow for addressing bits
+  _RXPacketL = buffer[0];
+  RXStart = buffer[1];
 
-#ifdef SX1280DEBUG2
-  Serial.print(F("RXPacketL,"));
-  Serial.print(_RXPacketL);
-  Serial.print(F(",RXEnd,"));
-  Serial.println(_RXEnd);
-#endif
+  if (_RXPacketL > size)                 //check passed buffer is big enough for packet
+  {
+  _RXPacketL = size;                     //truncate packet if not enough space
+  }
+   
+  RXEnd = _RXPacketL + RXStart;          //calculate the end of the packet in the buffer
 
   digitalWrite(_NSS, LOW);               //start the burst read
   SPI.transfer(RADIO_READ_BUFFER);
-  SPI.transfer(_RXStart);
+  SPI.transfer(RXStart);
   SPI.transfer(0xFF);
 
   _RXPacketType = SPI.transfer(0);
   _RXDestination = SPI.transfer(0);
   _RXSource = SPI.transfer(0);
-
+  RXStart = RXStart + 3;                 //move start pointer 3 forward 
+   
+   
   //now fill RXBUFF
-  for (index = _RXStart; index <= _RXEnd; index++)
+  for (index = RXStart; index < RXEnd; index++)
   {
-    if (index > maxindex)
-    {
-      break;
-    }
-
     RegData = SPI.transfer(0);
     RXbuffer[index] = RegData;
   }
   digitalWrite(_NSS, HIGH);
-
+  checkBusy();
   return _RXPacketL;
 }
 
 
 
-uint8_t SX1280Class::readPacket(uint8_t *rxbuffer, uint8_t size)
+uint8_t SX1280Class::readPacketAddressedFLRC(uint8_t *RXbuffer, uint8_t size)
+{
+#ifdef SX1280DEBUG
+  Serial.println(F("readPacketAddressed()"));
+#endif
+
+  uint8_t buffer[2];
+  uint8_t index, RegData, RXStart, RXEnd;
+
+  readCommand(RADIO_GET_RXBUFFERSTATUS, buffer, 2);
+
+  _RXPacketL = buffer[0];
+  RXStart = buffer[1];
+  
+  if (_RXPacketL > size)                 //check passed buffer is big enough for packet
+  {
+  _RXPacketL = size;                     //truncate packet if not enough space
+  }
+
+  RXEnd = (RXStart + _RXPacketL);        //calculate the end of the packet in the buffer
+
+  digitalWrite(_NSS, LOW);               //start the burst read
+  SPI.transfer(RADIO_READ_BUFFER);
+  SPI.transfer(RXStart);
+  SPI.transfer(0xFF);
+
+  _RXPacketType = SPI.transfer(0);
+  _RXDestination = SPI.transfer(0);
+  _RXSource = SPI.transfer(0);
+  RXStart = RXStart + 3;                 //move start pointer 3 forward 
+
+  //now fill RXBUFF
+  for (index = RXStart; index < RXEnd; index++)
+  {
+    RegData = SPI.transfer(0);
+    RXbuffer[index] = RegData;
+  }
+  digitalWrite(_NSS, HIGH);
+  checkBusy();
+  return _RXPacketL;
+}
+
+
+
+uint8_t SX1280Class::readPacketLoRa(uint8_t *RXbuffer, uint8_t size)
 {
 #ifdef SX1280DEBUG
   Serial.println(F("readPacket()"));
 #endif
 
-  uint8_t index, regdata, rxstart, rxend;
+  uint8_t index, regdata, RXStart, RXEnd;
   uint8_t buffer[2];
 
   readCommand(RADIO_GET_RXBUFFERSTATUS, buffer, 2);
   _RXPacketL = buffer[0];
-  rxstart = buffer[1];
-  rxend = _RXPacketL - 1;
+  RXStart = buffer[1];
 
-  if ((_RXPacketL + rxstart) > size)   //check passed buffer is big enough for packet
+  if (_RXPacketL > size)               //check passed buffer is big enough for packet
   {
-    return 0;
+  _RXPacketL = size;                   //truncate packet if not enough space
   }
+
+  RXEnd = RXStart + _RXPacketL;        //calculate RXEend
+  
+  digitalWrite(_NSS, LOW);             //start the burst read
+  SPI.transfer(RADIO_READ_BUFFER);
+  SPI.transfer(RXStart);
+  SPI.transfer(0xFF);
+
+  for (index = RXStart; index < RXEnd; index++)
+  {
+    regdata = SPI.transfer(0);
+    RXbuffer[index] = regdata;
+  }
+
+  digitalWrite(_NSS, HIGH);
+  checkBusy();
+  return _RXPacketL;                     
+}
+
+
+
+uint8_t SX1280Class::readPacketLoRaImplicit(uint8_t *RXbuffer, uint8_t size)
+{
+#ifdef SX1280DEBUG
+  Serial.println(F("readPacket()"));
+#endif
+
+  uint8_t index, regdata, RXStart, RXEnd;
+  uint8_t buffer[2];
+
+  readCommand(RADIO_GET_RXBUFFERSTATUS, buffer, 2);
+  _RXPacketL = size;
+  RXStart = buffer[1];
+  
+  if (_RXPacketL > size)               //check passed buffer is big enough for packet
+  {
+  _RXPacketL = size;                   //truncate packet if not enough space
+  }
+  
+  RXEnd = RXStart + _RXPacketL;        //calculate RXEend
+
+  digitalWrite(_NSS, LOW);             //start the burst read
+  SPI.transfer(RADIO_READ_BUFFER);
+  SPI.transfer(RXStart);
+  SPI.transfer(0xFF);
+
+  for (index = RXStart; index < RXEnd; index++)
+  {
+    regdata = SPI.transfer(0);
+    RXbuffer[index] = regdata;
+  }
+
+  digitalWrite(_NSS, HIGH);
+  
+  return _RXPacketL;
+}
+
+
+uint8_t SX1280Class::readPacketFLRC(uint8_t *RXbuffer, uint8_t size)
+{
+#ifdef SX1280DEBUG
+  Serial.println(F("readPacket()"));
+#endif
+
+  uint8_t index, regdata, RXStart, RXEnd;
+  uint8_t buffer[2];
+
+  readCommand(RADIO_GET_RXBUFFERSTATUS, buffer, 2);
+  _RXPacketL = buffer[0];
+  RXStart = buffer[1];
+  
+  if (_RXPacketL > size)                 //check passed buffer is big enough for packet
+  {
+  _RXPacketL = size;                     //truncate packet if not enough space
+  }
+
+  RXEnd = RXStart + _RXPacketL;          //calculate rxend
 
   digitalWrite(_NSS, LOW);               //start the burst read
   SPI.transfer(RADIO_READ_BUFFER);
-  SPI.transfer(rxstart);
+  SPI.transfer(RXStart);
   SPI.transfer(0xFF);
 
-  for (index = 0; index <= rxend; index++)
+  for (index = RXStart; index < RXEnd; index++)
   {
     regdata = SPI.transfer(0);
-    rxbuffer[index] = regdata;
+    RXbuffer[index] = regdata;
   }
 
   digitalWrite(_NSS, HIGH);
@@ -821,81 +967,37 @@ uint8_t SX1280Class::readPacket(uint8_t *rxbuffer, uint8_t size)
 }
 
 
-bool SX1280Class::sendPacketLoRa(uint8_t *txbuffer, uint8_t size, int16_t txtimeoutmS, int8_t txpower, uint8_t _DIO)
+bool SX1280Class::sendPacketLoRa(uint8_t *txbuffer, uint8_t size, int32_t txtimeoutmS, int8_t txpower, uint8_t _DIO)
 {
 #ifdef SX1280DEBUG
   Serial.println(F("sendPacketLoRa()"));
 #endif
   uint8_t index;
-  uint8_t maxindex = (size - 1);
   uint8_t bufferdata;
-
-  setStandby(STDBY_RC);
+  
+  if (size == 0)
+  {
+   return false;
+  }
+  
+  setStandby(MODE_STDBY_RC);
   setBufferBaseAddress(0, 0);
   checkBusy();
   digitalWrite(_NSS, LOW);
   SPI.transfer(RADIO_WRITE_BUFFER);
   SPI.transfer(0);
 
-  for (index = 0; index <= maxindex; index++)
+  for (index = 0; index < size; index++)
   {
     bufferdata = txbuffer[index];
     SPI.transfer(bufferdata);
-
   }
-
+  
   digitalWrite(_NSS, HIGH);
-  //setPacketParams(savedPacketParam1,savedPacketParam2,size,savedPacketParam4,savedPacketParam5,savedPacketParam6,savedPacketParam7);
+  checkBusy();
+  _TXPacketL = size;  
   writeRegister(REG_LR_PAYLOADLENGTH, size);
   setTxParams(txpower, RAMP_TIME);
-  setTx(PERIOBASE_01_MS, txtimeoutmS);                            //this starts the TX
-
-  while (!digitalRead(_DIO));                                      //Wait for DIO to go high
-
-  if (readIrqStatus() & IRQ_RX_TX_TIMEOUT )                         //check for timeout
-  {
-    return false;
-  }
-  else
-  {
-    return true;
-  }
-}
-
-
-
-
-bool SX1280Class::sendPacketFLRC(uint8_t *txbuffer, uint8_t size, int16_t txtimeoutmS, int8_t txpower, uint8_t _DIO)
-{
-#ifdef SX1280DEBUG
-  Serial.println(F("sendPacketFLRC()"));
-#endif
-  uint8_t index;
-  uint8_t maxindex = (size - 1);
-  uint8_t bufferdata;
-
-  if ((size > 127) || (size < 6 ))
-  {
-    return false;
-  }
-
-  setStandby(STDBY_RC);
-  setBufferBaseAddress(0, 0);
-  checkBusy();
-  digitalWrite(_NSS, LOW);
-  SPI.transfer(RADIO_WRITE_BUFFER);
-  SPI.transfer(0);
-
-  for (index = 0; index <= maxindex; index++)
-  {
-    bufferdata = txbuffer[index];
-    SPI.transfer(bufferdata);
-
-  }
-
-  digitalWrite(_NSS, HIGH);
-  setPacketParams(savedPacketParam1, savedPacketParam2, savedPacketParam3, savedPacketParam4, size, savedPacketParam6, savedPacketParam7);
-  setTxParams(txpower, RADIO_RAMP_02_US);
   setTx(PERIOBASE_01_MS, txtimeoutmS);                            //this starts the TX
 
   while (!digitalRead(_DIO));                                     //Wait for DIO to go high
@@ -911,97 +1013,48 @@ bool SX1280Class::sendPacketFLRC(uint8_t *txbuffer, uint8_t size, int16_t txtime
 }
 
 
-uint32_t SX1280Class::sendPacketAddressedLoRa(uint8_t *txbuffer, uint8_t size, char txpackettype, char txdestination, char txsource, int16_t txtimeoutmS, int8_t txpower, uint8_t _DIO)
+
+
+bool SX1280Class::sendPacketFLRC(uint8_t *TXbuffer, uint8_t size, int32_t txtimeoutmS, int8_t TXpower, uint8_t _DIO)
 {
 #ifdef SX1280DEBUG
-  Serial.println(F("sendPacketAddressedLoRa()"));
+  Serial.println(F("sendPacketFLRC()"));
 #endif
   uint8_t index;
-  uint8_t maxindex = (size - 1);
-  uint8_t txpacketL = 0;
   uint8_t bufferdata;
-  uint32_t startmS, timemS;
-
-
-  txpacketL = size + 3;                           //need to check for minimum of 6 max of 127
-  setStandby(STDBY_RC);
-  setBufferBaseAddress(0, 0);
-  checkBusy();
-  digitalWrite(_NSS, LOW);
-  SPI.transfer(RADIO_WRITE_BUFFER);
-  SPI.transfer(0);
-  SPI.transfer(txpackettype);                     //Write the packet type
-  SPI.transfer(txdestination);                    //Destination node
-  SPI.transfer(txsource);                         //Source node
-  txpacketL = 3 + size;                           //we have added 3 header bytes to size
-
-  for (index = 0; index <= maxindex; index++)
+  
+  if (size == 0)
   {
-    bufferdata = txbuffer[index];
-    SPI.transfer(bufferdata);
+   return false;
   }
-
-  digitalWrite(_NSS, HIGH);
-  writeRegister(REG_LR_PAYLOADLENGTH, txpacketL);
-  setTxParams(txpower, RADIO_RAMP_02_US);
-  startmS = millis();
-  setTx(PERIOBASE_01_MS, txtimeoutmS);             //this starts the TX
-
-  while (!digitalRead(_DIO));                      //Wait for DIO to go high
-
-  startmS = millis() - startmS;
-
-  if (readIrqStatus() & IRQ_RX_TX_TIMEOUT )        //check for timeout
-  {
-    return 0;
-  }
-  else
-  {
-    return (uint16_t) startmS;
-  }
-}
-
-
-bool SX1280Class::sendPacketAddressedFLRC(uint8_t *txbuffer, uint8_t size, char txpackettype, char txdestination, char txsource, int16_t txtimeoutmS, int8_t _TXPower, uint8_t _DIO)
-{
-#ifdef SX1280DEBUG
-  Serial.println(F("sendPacketAddressedFLRC()"));
-#endif
-  uint8_t index;
-  uint8_t maxindex = (size - 1);
-  uint8_t txpacketL = 0;
-  uint8_t bufferdata;
-
-  txpacketL = size + 3;                   //need to check for minimum of 6 max of 127
-
-  if ((txpacketL > 127) || (txpacketL < 6 ))
+  
+  if ((size > 127) || (size < 6 ))
   {
     return false;
   }
-
-  setStandby(STDBY_RC);
+  
+  setStandby(MODE_STDBY_RC);
   setBufferBaseAddress(0, 0);
   checkBusy();
   digitalWrite(_NSS, LOW);
   SPI.transfer(RADIO_WRITE_BUFFER);
   SPI.transfer(0);
-  SPI.transfer(txpackettype);                     //Write the packet type
-  SPI.transfer(txdestination);                    //Destination node
-  SPI.transfer(txsource);                         //Source node
-  txpacketL = 3 + size;                           //we have added 3 header bytes to _size
 
-  for (index = 0; index <= maxindex; index++)
+  for (index = 0; index < size; index++)
   {
-    bufferdata = txbuffer[index];
+    bufferdata = TXbuffer[index];
     SPI.transfer(bufferdata);
+
   }
 
   digitalWrite(_NSS, HIGH);
-  setPacketParams(savedPacketParam1, savedPacketParam2, savedPacketParam3, savedPacketParam4, txpacketL, savedPacketParam6, savedPacketParam7);
-  setTxParams(_TXPower, RADIO_RAMP_02_US);
-  setTx(PERIOBASE_01_MS, txtimeoutmS);                           //this starts the TX
+  checkBusy();
+  _TXPacketL = size;
+  setPacketParams(savedPacketParam1, savedPacketParam2, savedPacketParam3, savedPacketParam4, size, savedPacketParam6, savedPacketParam7);
+  setTxParams(TXpower, RADIO_RAMP_02_US);
+  setTx(PERIOBASE_01_MS, txtimeoutmS);                            //this starts the TX
 
-  while (!digitalRead(_DIO));                                    //Wait for DIO to go high
+  while (!digitalRead(_DIO));                                     //Wait for DIO to go high
 
   if (readIrqStatus() & IRQ_RX_TX_TIMEOUT )                       //check for timeout
   {
@@ -1014,27 +1067,136 @@ bool SX1280Class::sendPacketAddressedFLRC(uint8_t *txbuffer, uint8_t size, char 
 }
 
 
-void SX1280Class::rxEnable(int8_t pinRXEN, int8_t pinTXEN)
+bool SX1280Class::sendPacketAddressedLoRa(uint8_t *TXbuffer, uint8_t size, char TXpackettype, char TXdestination, char TXsource, int32_t txtimeoutmS, int8_t TXpower, uint8_t _DIO)
 {
-  //Enable RX mode on Ebyte E28-2G4M20S
+#ifdef SX1280DEBUG
+  Serial.println(F("sendPacketAddressedLoRa()"));
+#endif
+  uint8_t index;
+  uint8_t txpacketL = 0;
+  uint8_t bufferdata;
+  
+  if (size == 0)
+  {
+   return false;
+  } 
+  
+  txpacketL = size + 3;
+  setStandby(MODE_STDBY_RC);
+  setBufferBaseAddress(0, 0);
+  checkBusy();
+  digitalWrite(_NSS, LOW);
+  SPI.transfer(RADIO_WRITE_BUFFER);
+  SPI.transfer(0);
+  SPI.transfer(TXpackettype);                     //Write the packet type
+  SPI.transfer(TXdestination);                    //Destination node
+  SPI.transfer(TXsource);                         //Source node
+  txpacketL = 3 + size;                           //we have added 3 header bytes to size
+
+  for (index = 0; index < size; index++)
+  {
+    bufferdata = TXbuffer[index];
+    SPI.transfer(bufferdata);
+  }
+
+  digitalWrite(_NSS, HIGH);
+  checkBusy();
+  _TXPacketL = size;
+  writeRegister(REG_LR_PAYLOADLENGTH, txpacketL);
+  setTxParams(TXpower, RADIO_RAMP_02_US);
+  setTx(PERIOBASE_01_MS, txtimeoutmS);             //this starts the TX
+
+  while (!digitalRead(_DIO));                      //Wait for DIO to go high
+
+  if (readIrqStatus() & IRQ_RX_TX_TIMEOUT )        //check for timeout
+  {
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
+
+bool SX1280Class::sendPacketAddressedFLRC(uint8_t *TXbuffer, uint8_t size, char TXpackettype, char TXdestination, char TXsource, int32_t txtimeoutmS, int8_t TXPower, uint8_t _DIO)
+{
+#ifdef SX1280DEBUG
+  Serial.println(F("sendPacketAddressedFLRC()"));
+#endif
+  uint8_t index;
+  uint8_t txpacketL = 0;
+  uint8_t bufferdata;
+  
+  if (size == 0)
+  {
+   return false;
+  }
+
+  txpacketL = size + 3;                   //need to check for minimum of 6 max of 127
+
+  if ((txpacketL > 127) || (txpacketL < 6 ))
+  {
+    return false;
+  }
+
+  setStandby(MODE_STDBY_RC);
+  setBufferBaseAddress(0, 0);
+  checkBusy();
+  digitalWrite(_NSS, LOW);
+  SPI.transfer(RADIO_WRITE_BUFFER);
+  SPI.transfer(0);
+  SPI.transfer(TXpackettype);                     //Write the packet type
+  SPI.transfer(TXdestination);                    //Destination node
+  SPI.transfer(TXsource);                         //Source node
+  txpacketL = 3 + size;                           //we have added 3 header bytes to _size
+
+  for (index = 0; index < size; index++)
+  {
+    bufferdata = TXbuffer[index];
+    SPI.transfer(bufferdata);
+  }
+
+  digitalWrite(_NSS, HIGH);
+  checkBusy();
+  _TXPacketL = size;
+  setPacketParams(savedPacketParam1, savedPacketParam2, savedPacketParam3, savedPacketParam4, txpacketL, savedPacketParam6, savedPacketParam7);
+  setTxParams(TXPower, RADIO_RAMP_02_US);
+  setTx(PERIOBASE_01_MS, txtimeoutmS);             //this starts the TX
+  while (!digitalRead(_DIO));                      //Wait for DIO to go high
+
+  if (readIrqStatus() & IRQ_RX_TX_TIMEOUT )        //check for timeout
+  {
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
+
+void SX1280Class::rxEnable()
+{
+ //Enable RX mode on device such as Ebyte E28-2G4M20S which have RX and TX enable pins
 #ifdef SX1280DEBUG
   Serial.println(F("rxEnable()"));
 #endif
 
-  digitalWrite(pinRXEN, HIGH);
-  digitalWrite(pinTXEN, LOW);
+  digitalWrite(_RXEN, HIGH);
+  digitalWrite(_TXEN, LOW);
 }
 
 
-void SX1280Class::txEnable(int8_t pinRXEN, int8_t pinTXEN)
+void SX1280Class::txEnable()
 {
-  //Enable TX mode on Ebyte E28-2G4M20S
+  //Enable RX mode on device such as Ebyte E28-2G4M20S which have RX and TX enable pins
 #ifdef SX1280DEBUG
   Serial.println(F("txEnable()"));
 #endif
 
-  digitalWrite(pinRXEN, LOW);
-  digitalWrite(pinTXEN, HIGH);
+  digitalWrite(_RXEN, LOW);
+  digitalWrite(_TXEN, HIGH);
 }
 
 
@@ -1055,6 +1217,61 @@ void SX1280Class::setRfFrequency(uint32_t frequency, int32_t offset)
   buffer[1] = ( uint8_t )( ( freqtemp >> 8 ) & 0xFF );
   buffer[2] = ( uint8_t )( freqtemp & 0xFF );
   writeCommand(RADIO_SET_RFFREQUENCY, buffer, 3);
+}
+
+
+int32_t SX1280Class::getFrequencyErrorRegValue()
+{
+  int32_t FrequencyError;
+  uint32_t regmsb, regmid, reglsb, allreg;
+  
+  setStandby(MODE_STDBY_XOSC);
+  
+  regmsb = readRegister( REG_LR_ESTIMATED_FREQUENCY_ERROR_MSB );
+  regmsb = regmsb & 0x0F;       //clear bit 20 which is always set
+  
+  regmid = readRegister( REG_LR_ESTIMATED_FREQUENCY_ERROR_MSB + 1 );
+  
+  reglsb = readRegister( REG_LR_ESTIMATED_FREQUENCY_ERROR_MSB + 2 );
+  setStandby(MODE_STDBY_RC);
+
+  #ifdef LORADEBUG
+  Serial.println();
+  Serial.print(F("Registers "));
+  Serial.print(regmsb,HEX);
+  Serial.print(F(" "));
+  Serial.print(regmid,HEX);
+  Serial.print(F(" "));
+  Serial.println(reglsb,HEX);
+  #endif
+    
+  allreg = (uint32_t) ( regmsb << 16 ) | ( regmid << 8 ) | reglsb;
+
+  if (allreg & 0x80000)
+  {
+  FrequencyError = (0xFFFFF - allreg) * -1;
+  }
+  else
+  {
+  FrequencyError = allreg; 
+  }
+
+  return FrequencyError;
+}
+
+
+int32_t SX1280Class::getFrequencyErrorHz()
+{
+  int32_t error, regvalue;
+  uint32_t bandwidth;
+  float divider;
+
+  bandwidth = getLoRaBandwidth();                   //gets the last configured
+  divider = (float) 1625000 / bandwidth;
+  regvalue = getFrequencyErrorRegValue();
+  error = (FREQ_ERROR_CORRECTION * regvalue) / divider;
+
+  return error;
 }
 
 
@@ -1141,8 +1358,15 @@ void SX1280Class::setRx(uint8_t _periodBase, uint16_t _periodBaseCount)
 #ifdef SX1280DEBUG
   Serial.println(F("setRx()"));
 #endif
-
+  
+  if (_rxtxpinmode)  
+  {
+  rxEnable();
+  }
+  
   uint8_t buffer[3];
+  
+  clearIrqStatus(IRQ_RADIO_ALL);                             //clear all interrupt flags
   buffer[0] = _periodBase;
   buffer[1] = ( uint8_t ) ((_periodBaseCount >> 8 ) & 0x00FF);
   buffer[2] = ( uint8_t ) (_periodBaseCount & 0x00FF);
@@ -1170,7 +1394,6 @@ bool SX1280Class::packetOK(uint16_t mask)
 #ifdef SX1280DEBUG
   Serial.print(F("packetOK()"));
 #endif
-
 
   uint16_t temp;
   temp = readIrqStatus();
@@ -1268,7 +1491,6 @@ void SX1280Class::readCommand(uint8_t Opcode, uint8_t *buffer, uint16_t size)
 
   for ( i = 0; i < size; i++ )
   {
-
     *(buffer + i) = SPI.transfer(0xFF);
   }
   digitalWrite(_NSS, HIGH);
@@ -1339,7 +1561,6 @@ void SX1280Class::readPacketReceptionFLRC()
 }
 
 
-
 void SX1280Class::writeRegisters(uint16_t address, uint8_t *buffer, uint16_t size)
 {
 #ifdef SX1280DEBUG
@@ -1390,21 +1611,18 @@ void SX1280Class::writeRegister(uint16_t address, uint8_t value)
 }
 
 
-void SX1280Class::setSleep()
+void SX1280Class::setSleep(uint8_t sleepconfig)
 {
 #ifdef SX1280DEBUG
   Serial.println(F("setSleep()"));
 #endif
-
-  uint8_t Opcode, sleepConfig;
-
-  Opcode = 0x84;
-  sleepConfig = 0x07; //bit2: 1: ; bit0: 0:
+  setStandby(MODE_STDBY_RC);
   checkBusy();
   digitalWrite(_NSS, LOW);
-  SPI.transfer(Opcode);
-  SPI.transfer(sleepConfig);
+  SPI.transfer(RADIO_SET_SLEEP);
+  SPI.transfer(sleepconfig);
   digitalWrite(_NSS, HIGH);
+  delay(1);           //allow time for shutdown
 }
 
 
@@ -1414,9 +1632,15 @@ void SX1280Class::setTx(uint8_t _periodBase, uint16_t _periodBaseCount)
 #ifdef SX1280DEBUG
   Serial.println(F("setTx()"));
 #endif
+  
+  if (_rxtxpinmode)  
+  {
+  txEnable();
+  }
+  
   uint8_t buffer[3];
-
-  checkBusy();
+  
+  clearIrqStatus(IRQ_RADIO_ALL);                             //clear all interrupt flags 
   buffer[0] = _periodBase;
   buffer[1] = ( uint8_t )( ( _periodBaseCount >> 8 ) & 0x00FF );
   buffer[2] = ( uint8_t )( _periodBaseCount & 0x00FF );
@@ -1468,8 +1692,7 @@ uint8_t SX1280Class::readRXSource()
 }
 
 
-
-bool SX1280Class::sendBufferLoRa(int16_t txtimeoutmS, int8_t txpower, uint8_t _DIO)
+bool SX1280Class::sendFIFOLoRa(int16_t txtimeoutmS, int8_t txpower, uint8_t _DIO)
 {
 #ifdef SX1280DEBUG
   Serial.println(F("sendBufferLoRa()"));
@@ -1477,11 +1700,11 @@ bool SX1280Class::sendBufferLoRa(int16_t txtimeoutmS, int8_t txpower, uint8_t _D
 
   setPacketParams(savedPacketParam1, savedPacketParam2, _TXPacketL, savedPacketParam4, savedPacketParam5, savedPacketParam6, savedPacketParam7);
   setTxParams(txpower, RAMP_TIME);
-  setTx(PERIOBASE_01_MS, txtimeoutmS);                            //this starts the TX
+  setTx(PERIOBASE_01_MS, txtimeoutmS);                     //this starts the TX
 
-  while (!digitalRead(_DIO));                                      //Wait for DIO to go high
+  while (!digitalRead(_DIO));                              //Wait for DIO to go high
 
-  if (readIrqStatus() & IRQ_RX_TX_TIMEOUT )                         //check for timeout
+  if (readIrqStatus() & IRQ_RX_TX_TIMEOUT )                //check for timeout
   {
     return false;
   }
@@ -1534,16 +1757,7 @@ void SX1280Class::setModulationParams(uint8_t modParam1, uint8_t modParam2, uint
   buffer[0] = modParam1;
   buffer[1] = modParam2;
   buffer[2] = modParam3;
-#ifdef SX1280DEBUG2
-  Serial.println();
-  Serial.print(F("modParam1="));
-  Serial.print(modParam1, HEX);
-  Serial.print(F(" modParam2="));
-  Serial.print(modParam2, HEX);
-  Serial.print(F(" modParam3="));
-  Serial.print(modParam3, HEX);
-  Serial.println();
-#endif
+
   writeCommand(RADIO_SET_MODULATIONPARAMS, buffer, 3);
 }
 
@@ -1555,7 +1769,7 @@ bool SX1280Class::config()
 #endif
 
   resetDevice();
-  setStandby(STDBY_RC);
+  setStandby(MODE_STDBY_RC);
   setRegulatorMode(savedRegulatorMode);
   setPacketType(savedPacketType);
   setRfFrequency(savedFrequency, savedOffset);
@@ -1577,6 +1791,227 @@ void SX1280Class::printSavedModulationParams()
 }
 
 
+uint8_t SX1280Class::readsavedModParam1()
+{
+  return savedModParam1;
+}
+
+
+uint8_t SX1280Class::readsavedModParam2()
+{
+  return savedModParam2;
+}
+
+
+uint8_t SX1280Class::readsavedModParam3()
+{
+  return savedModParam3;
+}
+
+
+uint8_t SX1280Class::readsavedPower()
+{
+  return savedTXPower;
+}
+
+
+uint32_t SX1280Class::getFreqInt()
+{
+  //get the current set device frequency, return as long integer
+  uint8_t Msb, Mid, Lsb;
+  uint32_t uinttemp;
+  float floattemp;
+  Msb = readRegister(REG_RFFrequency23_16);
+  Mid = readRegister(REG_RFFrequency15_8);
+  Lsb = readRegister(REG_RFFrequency7_0);
+  floattemp = ((Msb * 0x10000ul) + (Mid * 0x100ul) + Lsb);
+  floattemp = ((floattemp * FREQ_STEP) / 1000000ul);
+  uinttemp = (uint32_t)(floattemp * 1000000);
+  return uinttemp;
+}
+
+
+uint32_t SX1280Class::returnBandwidth(uint8_t data)
+{
+  switch (data)
+  {
+    case LORA_BW_0200:
+      return 203125;
+
+    case LORA_BW_0400:
+      return 406250;
+
+    case LORA_BW_0800:
+      return 812500;
+
+    case LORA_BW_1600:
+      return 1625000;
+
+    default:
+      break;
+  }
+
+  return 0x0;                      //so that a bandwidth not set can be identified
+}
+
+
+uint8_t SX1280Class::returnSF(uint8_t data)
+{
+  return (data >> 4);
+}
+
+
+//*******************************************************************************
+//Ranging routines
+//*******************************************************************************
+
+
+void SX1280Class::setRangingRangingAddress(uint32_t address)
+{
+#ifdef LORADEBUG
+  Serial.println(F("SetRangingRangingAddress()"));
+#endif
+
+  uint8_t buffer[4];
+
+  buffer[0] = (address >> 24u ) & 0xFFu;
+  buffer[1] = (address >> 16u) & 0xFFu;
+  buffer[2] = (address >>  8u) & 0xFFu;
+  buffer[3] = (address & 0xFFu);
+
+  writeRegisters(0x916, buffer, 4 );
+}
+
+
+void SX1280Class::setRangingRequestAddress(uint32_t address)
+{
+#ifdef LORADEBUG
+  Serial.println(F("SetRangingRangingAddress()"));
+#endif
+
+  uint8_t buffer[4];
+
+  buffer[0] = (address >> 24u ) & 0xFFu;
+  buffer[1] = (address >> 16u) & 0xFFu;
+  buffer[2] = (address >>  8u) & 0xFFu;
+  buffer[3] = (address & 0xFFu);
+
+  writeRegisters(0x912, buffer, 4 );
+}
+
+
+void SX1280Class::setRangingCalibration(uint16_t cal)
+{
+  writeRegister( REG_LR_RANGINGRERXTXDELAYCAL, ( uint8_t )( ( cal >> 8 ) & 0xFF ) );
+  writeRegister( REG_LR_RANGINGRERXTXDELAYCAL + 1, ( uint8_t )( ( cal ) & 0xFF ) );
+}
+
+
+void SX1280Class::setRangingRole(uint8_t role)
+{
+#ifdef LORADEBUG
+  Serial.println(F("SetRangingRangingAddress()"));
+#endif
+
+  uint8_t buffer[1];
+
+  buffer[0] = role;
+
+  writeCommand(RADIO_SET_RANGING_ROLE, buffer, 1 );
+}
+
+
+double SX1280Class::getRangingResult(uint8_t resultType)
+{
+  uint32_t valLsb = 0;
+  float val = 0.0;
+
+  setStandby(MODE_STDBY_XOSC);
+  writeRegister( 0x97F, readRegister( 0x97F ) | ( 1 << 1 ) ); // enable LORA modem clock
+  writeRegister( REG_LR_RANGINGRESULTCONFIG, ( readRegister( REG_LR_RANGINGRESULTCONFIG ) & MASK_RANGINGMUXSEL ) | ( ( ( ( uint8_t )resultType ) & 0x03 ) << 4 ) );
+  valLsb = ( ( (uint32_t) readRegister( REG_LR_RANGINGRESULTBASEADDR ) << 16 ) | ( readRegister( REG_LR_RANGINGRESULTBASEADDR + 1 ) << 8 ) | ( readRegister( REG_LR_RANGINGRESULTBASEADDR + 2 ) ) );
+  setStandby(MODE_STDBY_RC);
+
+  if (valLsb >= 0x800000)                  //raw reg value at low distance can goto 0x800000 which is negative, set distance to zero if this happens
+  {
+    valLsb = 0;
+  }
+
+  // Conversion from LSB to distance. For explanation on the formula, refer to Datasheet of SX1280
+
+  switch (resultType)
+  {
+    case RANGING_RESULT_RAW:
+      // Convert the ranging LSB to distance in meter. The theoretical conversion from register value to distance [m] is given by:
+      // distance [m] = ( complement2( register ) * 150 ) / ( 2^12 * bandwidth[MHz] ) ). The API provide BW in [Hz] so the implemented
+      // formula is complement2( register ) / bandwidth[Hz] * A, where A = 150 / (2^12 / 1e6) = 36621.09
+      val = ( double )complement2( valLsb, 24 ) / ( double ) getLoRaBandwidth( ) * 36621.09375;
+      break;
+
+    case RANGING_RESULT_AVERAGED:
+    case RANGING_RESULT_DEBIASED:
+    case RANGING_RESULT_FILTERED:
+      val = ( double )valLsb * 20.0 / 100.0;
+      break;
+    default:
+      val = 0.0;
+      break;
+  }
+
+  return val;
+}
+
+
+uint32_t SX1280Class::getRangingResultRegValue(uint8_t resultType)
+{
+  uint32_t valLsb = 0;
+
+  setStandby(MODE_STDBY_XOSC);
+  writeRegister( 0x97F, readRegister( 0x97F ) | ( 1 << 1 ) ); // enable LORA modem clock
+  writeRegister( REG_LR_RANGINGRESULTCONFIG, ( readRegister( REG_LR_RANGINGRESULTCONFIG ) & MASK_RANGINGMUXSEL ) | ( ( ( ( uint8_t )resultType ) & 0x03 ) << 4 ) );
+  valLsb = ( ( (uint32_t) readRegister( REG_LR_RANGINGRESULTBASEADDR ) << 16 ) | ( (uint32_t) readRegister( REG_LR_RANGINGRESULTBASEADDR + 1 ) << 8 ) | ( readRegister( REG_LR_RANGINGRESULTBASEADDR + 2 ) ) );
+  setStandby(MODE_STDBY_RC);
+  return valLsb;
+}
+
+
+uint32_t SX1280Class::getLoRaBandwidth()
+{
+  uint32_t bwValue = 0;
+
+  switch (savedModParam2)
+  {
+    case LORA_BW_0200:
+      bwValue = 203125;
+      break;
+    case LORA_BW_0400:
+      bwValue = 406250;
+      break;
+    case LORA_BW_0800:
+      bwValue = 812500;
+      break;
+    case LORA_BW_1600:
+      bwValue = 1625000;
+      break;
+    default:
+      bwValue = 0;
+  }
+  return bwValue;
+}
+
+
+int32_t SX1280Class::complement2( uint32_t num, uint8_t bitCnt )
+{
+    
+    int32_t retVal = ( int32_t )num;
+    if( num >= 2<<( bitCnt - 2 ) )
+    {
+        retVal -= 2<<( bitCnt - 1 );
+    }
+    return retVal;
+}
+
+
 //***************************************************************************
 //
 //Direct FIFO buffer access routines, these read and write data directly to an from
@@ -1594,8 +2029,8 @@ void SX1280Class::startWriteFIFO()
   Serial.println(F("startWriteFIFO()"));
 #endif
 
-  _TXcount = 0;           //this variable used to keep track of bytes written
-  setStandby(STDBY_RC);
+  _TXcount = 0;                            //this variable used to keep track of bytes written
+  setStandby(MODE_STDBY_RC);
   setBufferBaseAddress(0, 0);
   checkBusy();
   digitalWrite(_NSS, LOW);
@@ -1629,8 +2064,8 @@ void SX1280Class::startReadFIFO()
   readCommand(RADIO_GET_RXBUFFERSTATUS, buffer, 2);
   _RXPacketL = buffer[0];
   rxstart = buffer[1];
-
-  digitalWrite(_NSS, LOW);               //start the burst read
+  checkBusy();
+  digitalWrite(_NSS, LOW);                     //start the burst read
   SPI.transfer(RADIO_READ_BUFFER);
   SPI.transfer(rxstart);
   SPI.transfer(0xFF);
@@ -1904,232 +2339,4 @@ float SX1280Class::readFloat()
   _RXcount = _RXcount + 4;         //increment count of bytes read
   return readdata.f;
 }
-
-
-//***************************************************************************
-//End Direct buffer access routines
-//***************************************************************************
-
-
-uint8_t SX1280Class::readsavedModParam1()
-{
-  return savedModParam1;
-}
-
-
-uint8_t SX1280Class::readsavedModParam2()
-{
-  return savedModParam2;
-}
-
-
-uint8_t SX1280Class::readsavedModParam3()
-{
-  return savedModParam3;
-}
-
-
-uint8_t SX1280Class::readsavedPower()
-{
-  return savedTXPower;
-}
-
-
-uint32_t SX1280Class::GetFreqInt()
-{
-  //get the current set device frequency, return as long integer
-  uint8_t Msb, Mid, Lsb;
-  uint32_t uinttemp;
-  float floattemp;
-  Msb = readRegister(REG_RFFrequency23_16);
-  Mid = readRegister(REG_RFFrequency15_8);
-  Lsb = readRegister(REG_RFFrequency7_0);
-  floattemp = ((Msb * 0x10000ul) + (Mid * 0x100ul) + Lsb);
-  floattemp = ((floattemp * FREQ_STEP) / 1000000ul);
-  uinttemp = (uint32_t)(floattemp * 1000000);
-  return uinttemp;
-}
-
-
-uint16_t SX1280Class::returnBandwidth(uint8_t data)
-{
-  switch (data)
-  {
-    case LORA_BW_0200:
-      return 203;
-
-    case LORA_BW_0400:
-      return 406;
-
-    case LORA_BW_0800:
-      return 812;
-
-    case LORA_BW_1600:
-      return 1625;
-
-    default:
-      break;
-  }
-
-  return 0x0;                      //so that a bandwidth not set can be identified
-}
-
-
-uint8_t SX1280Class::returnSF(uint8_t data)
-{
-  return (data >> 4);
-}
-
-
-//*******************************************************************************
-//Ranging routines
-//*******************************************************************************
-
-
-void SX1280Class::setRangingRangingAddress(uint32_t address)
-{
-#ifdef LORADEBUG
-  Serial.println(F("SetRangingRangingAddress()"));
-#endif
-
-  uint8_t buffer[4];
-
-  buffer[0] = (address >> 24u ) & 0xFFu;
-  buffer[1] = (address >> 16u) & 0xFFu;
-  buffer[2] = (address >>  8u) & 0xFFu;
-  buffer[3] = (address & 0xFFu);
-
-  writeRegisters(0x916, buffer, 4 );
-}
-
-
-void SX1280Class::setRangingRequestAddress(uint32_t address)
-{
-#ifdef LORADEBUG
-  Serial.println(F("SetRangingRangingAddress()"));
-#endif
-
-  uint8_t buffer[4];
-
-  buffer[0] = (address >> 24u ) & 0xFFu;
-  buffer[1] = (address >> 16u) & 0xFFu;
-  buffer[2] = (address >>  8u) & 0xFFu;
-  buffer[3] = (address & 0xFFu);
-
-  writeRegisters(0x912, buffer, 4 );
-}
-
-
-void SX1280Class::setRangingCalibration(uint16_t cal)
-{
-  writeRegister( REG_LR_RANGINGRERXTXDELAYCAL, ( uint8_t )( ( cal >> 8 ) & 0xFF ) );
-  writeRegister( REG_LR_RANGINGRERXTXDELAYCAL + 1, ( uint8_t )( ( cal ) & 0xFF ) );
-}
-
-
-void SX1280Class::setRangingRole(uint8_t role)
-{
-#ifdef LORADEBUG
-  Serial.println(F("SetRangingRangingAddress()"));
-#endif
-
-  uint8_t buffer[1];
-
-  buffer[0] = role;
-
-  writeCommand(RADIO_SET_RANGING_ROLE, buffer, 1 );
-}
-
-
-double SX1280Class::getRangingResult(uint8_t resultType)
-{
-  uint32_t valLsb = 0;
-  float val = 0.0;
-
-  setStandby(STDBY_XOSC);
-  writeRegister( 0x97F, readRegister( 0x97F ) | ( 1 << 1 ) ); // enable LORA modem clock
-  writeRegister( REG_LR_RANGINGRESULTCONFIG, ( readRegister( REG_LR_RANGINGRESULTCONFIG ) & MASK_RANGINGMUXSEL ) | ( ( ( ( uint8_t )resultType ) & 0x03 ) << 4 ) );
-  valLsb = ( ( (uint32_t) readRegister( REG_LR_RANGINGRESULTBASEADDR ) << 16 ) | ( readRegister( REG_LR_RANGINGRESULTBASEADDR + 1 ) << 8 ) | ( readRegister( REG_LR_RANGINGRESULTBASEADDR + 2 ) ) );
-  setStandby(STDBY_RC);
-
-  if (valLsb >= 0x800000)                  //raw reg value at low distance can goto 0x800000 which is negative, set distance to zero if this happens
-  {
-    valLsb = 0;
-  }
-
-  // Conversion from LSB to distance. For explanation on the formula, refer to Datasheet of SX1280
-
-  switch (resultType)
-  {
-    case RANGING_RESULT_RAW:
-      // Convert the ranging LSB to distance in meter. The theoretical conversion from register value to distance [m] is given by:
-      // distance [m] = ( complement2( register ) * 150 ) / ( 2^12 * bandwidth[MHz] ) ). The API provide BW in [Hz] so the implemented
-      // formula is complement2( register ) / bandwidth[Hz] * A, where A = 150 / (2^12 / 1e6) = 36621.09
-      val = ( double )complement2( valLsb, 24 ) / ( double ) getLoRaBandwidth( ) * 36621.09375;
-      break;
-
-    case RANGING_RESULT_AVERAGED:
-    case RANGING_RESULT_DEBIASED:
-    case RANGING_RESULT_FILTERED:
-      val = ( double )valLsb * 20.0 / 100.0;
-      break;
-    default:
-      val = 0.0;
-      break;
-  }
-
-  return val;
-}
-
-
-uint32_t SX1280Class::getRangingResultRegValue(uint8_t resultType)
-{
-  uint32_t valLsb = 0;
-
-  setStandby(STDBY_XOSC);
-  writeRegister( 0x97F, readRegister( 0x97F ) | ( 1 << 1 ) ); // enable LORA modem clock
-  writeRegister( REG_LR_RANGINGRESULTCONFIG, ( readRegister( REG_LR_RANGINGRESULTCONFIG ) & MASK_RANGINGMUXSEL ) | ( ( ( ( uint8_t )resultType ) & 0x03 ) << 4 ) );
-  valLsb = ( ( (uint32_t) readRegister( REG_LR_RANGINGRESULTBASEADDR ) << 16 ) | ( (uint32_t) readRegister( REG_LR_RANGINGRESULTBASEADDR + 1 ) << 8 ) | ( readRegister( REG_LR_RANGINGRESULTBASEADDR + 2 ) ) );
-  setStandby(STDBY_RC);
-  return valLsb;
-}
-
-
-int32_t SX1280Class::getLoRaBandwidth( )
-{
-  int32_t bwValue = 0;
-
-  switch (savedModParam2)
-  {
-    case LORA_BW_0200:
-      bwValue = 203125;
-      break;
-    case LORA_BW_0400:
-      bwValue = 406250;
-      break;
-    case LORA_BW_0800:
-      bwValue = 812500;
-      break;
-    case LORA_BW_1600:
-      bwValue = 1625000;
-      break;
-    default:
-      bwValue = 0;
-  }
-  return bwValue;
-}
-
-
-int32_t SX1280Class::complement2( const uint32_t num, const uint8_t bitCnt )
-{
-
-  //modified version
-  int32_t retVal = ( int32_t )num;
-  if ( num >= ( uint32_t ) (2 << ( bitCnt - 2 )) )
-  {
-    retVal -= 2 << ( bitCnt - 1 );
-  }
-  return retVal;
-}
-
 
