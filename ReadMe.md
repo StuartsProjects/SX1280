@@ -1,12 +1,12 @@
 # SX1280 - Semtech 2.4GHz LoRa Transceivers
 
-**Updated 24/10/19**
+**Updated 24/10/19 **
 
 This is a a repository for my Arduino library for the Semtech SX1280 LoRa device. This Semtech device is available in modules from NiceRF and EByte. 
 
 **The Semtech SX1280 is a 3.3V logic level device, do not use with 5V logic level Arduinos.** The programs have only been tested on 3.3V 8Mhz ATMega328P and ATMega1284P processors. 
 
-To support the modules that require a RXEnable and TXEnable pin to be set correctly when transmitting or receiving you must execute the rxtxInit(RXEN, TXEN) library function to both enable the pins as outputs and carry out the appropriate switching, see the example programs. The library code has been tested with the Ebyte E28-2G4M20S module where the RXEN pin needs to be high during receive with TXEN low, and during transmit TXEN pin is high with RXEN pin low. 
+To support the modules that require a RXEnable and TXEnable pin to be set correctly when transmitting or receiving you must execute the 'rxtxInit(RXEN, TXEN)' library function to both enable the pins as outputs and carry out the appropriate switching, see the example programs. The library code has been tested with the Ebyte E28-2G4M20S module where the RXEN pin needs to be high during receive with TXEN low, and during transmit TXEN pin is high with RXEN pin low. 
 
 For all example programs you will need to define the following pins as a minimum for the LoRa module in the Settings.h file; NSS, RFBUSY, NRESET, DIO1. RXEN and TXEN are needed for modules that require RX and TX switching. 
 
@@ -17,7 +17,7 @@ FLRC (Fast Long Range Communication) mode is specified as having a similar sensi
 
 The library is now in its second revision, there are still some issues to attend to and changes to be made, see the sections 'Changes in Revision 2 Library' and 'Changes Required to Library' at the bottom of this document. 
 
-Please do not expect basic level support on how to connect the SX1280 devices to a particular Arduino or other device, I just don't have the time to do this. The examples do work, so if for you they do not, assume there is a problem with your Arduino setup or how you have wired the modules or that they are faulty.
+Please do not expect basic level support on how to connect the SX1280 devices to a particular Arduino or other device, I just don't have the time to do this. The examples do work, so if for you they do not, assume there is a problem with your Arduino set-up or how you have wired the modules or that they are faulty.
 
 If the example programs are working, but you consider the reception distance is poor at maximum power (12dBm) there is no magic voodoo configuration that will make reception 'much better'. Reception distance can vary tremendously depending on environment, what range you get with good line of sight can be 1000 (or more) times the reception distances in urban areas.
 
