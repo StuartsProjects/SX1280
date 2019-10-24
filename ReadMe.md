@@ -1,5 +1,7 @@
 # SX1280 - Semtech 2.4GHz LoRa Transceivers
 
+**Updated 24/10/19**
+
 This is a a repository for my Arduino library for the Semtech SX1280 LoRa device. This Semtech device is available in modules from NiceRF and EByte. 
 
 **The Semtech SX1280 is a 3.3V logic level device, do not use with 5V logic level Arduinos.** The programs have only been tested on 3.3V 8Mhz ATMega328P and ATMega1284P processors. 
