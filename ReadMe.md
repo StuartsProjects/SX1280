@@ -6,7 +6,7 @@ This is a a repository for my Arduino library for the Semtech SX1280 LoRa device
 
 **The Semtech SX1280 is a 3.3V logic level device, do not use with 5V logic level Arduinos.** The programs have only been tested on 3.3V 8Mhz ATMega328P and ATMega1284P processors. 
 
-To support the modules that require a RXEnable and TXEnable pin to be set correctly when transmitting or receiving you must execute the 'rxtxInit(RXEN, TXEN)' library function to both enable the pins as outputs and carry out the appropriate switching, see the example programs. The library code has been tested with the Ebyte E28-2G4M20S module where the RXEN pin needs to be high during receive with TXEN low, and during transmit TXEN pin is high with RXEN pin low. 
+To support the modules that require a RXEnable and TXEnable pin to be set correctly when transmitting or receiving you must execute the 'rxtxInit(RXEN, TXEN)' library function to both enable the pins as outputs and carry out the appropriate switching, see the example programs. The library code has been tested with the Ebyte E28-2G4M20S module where the RXEN pin needs to be high during receive with TXEN low, and during transmit TXEN pin is high with RXEN pin low. Note that the ranging functions will not work with modules that require the external RXEnable and TXEnable switching. 
 
 For all example programs you will need to define the following pins as a minimum for the LoRa module in the Settings.h file; NSS, RFBUSY, NRESET, DIO1. RXEN and TXEN are needed for modules that require RX and TX switching. 
 
