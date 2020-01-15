@@ -125,16 +125,16 @@ writeInt32	KEYWORD2
 readInt32	KEYWORD2
 
 writeUint32	KEYWORD2
-ureadUint32	KEYWORD2
+readUint32	KEYWORD2
 
 writeFloat	KEYWORD2
-float readFloat	KEYWORD2
+readFloat	KEYWORD2
 
 setRangingRangingAddress	KEYWORD2
 setRangingRequestAddress	KEYWORD2
 setRangingRole	KEYWORD2
 setRangingCalibration	KEYWORD2
-double getRangingResult	KEYWORD2
+getRangingResult	KEYWORD2
 complement2	KEYWORD2
 getRangingResultRegValue	KEYWORD2
 
