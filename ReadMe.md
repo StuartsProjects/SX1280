@@ -1,6 +1,19 @@
 # SX1280 - Semtech 2.4GHz LoRa Transceivers
 
-##Updated 24/10/19
+##Updated 18/03/20
+
+###This library will not longer be updated or supported. The functionality of this SX1280 library has now been included in the SX12XX Library;
+
+[https://github.com/LoRaTracker/SX12XX-LoRa](https://github.com/LoRaTracker/SX12XX-LoRa)
+
+Please use that library in future. The SX12xx library uses the same sketch style for the SX126X, SX127X and SX128X devices. Applications such as the GPS tracker and sensor transmitter, originally written for the SX127X device have been converted to run on the SX128X devices. 
+
+
+----------
+
+----------
+
+
 
 This is a a repository for my Arduino library for the Semtech SX1280 LoRa device. This Semtech device is available in modules from NiceRF and EByte. 
 
