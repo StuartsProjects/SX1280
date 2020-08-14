@@ -1,8 +1,8 @@
 # SX1280 - Semtech 2.4GHz LoRa Transceivers
 
-##Updated 18/03/20
+##Updated 17/07/20
 
-###This library will not longer be updated or supported. The functionality of this SX1280 library has now been included in the SX12XX Library;
+###This library has been removed, the functionality of the SX1280 library has now been included in the SX12XX Library;
 
 [https://github.com/StuartsProjects/SX12XX-LoRa](https://github.com/StuartsProjects/SX12XX-LoRa)
 
